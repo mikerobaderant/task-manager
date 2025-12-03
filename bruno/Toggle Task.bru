@@ -1,0 +1,16 @@
+meta {
+  name: Toggle Task
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/tasks/{{taskId}}/toggle
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+

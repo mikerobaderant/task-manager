@@ -1,0 +1,16 @@
+meta {
+  name: Complete Task
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/tasks/{{taskId}}/complete
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
