@@ -1,0 +1,213 @@
+# Task Manager — Cursor Rules
+
+## Project Overview
+
+This is a minimal task management web application built with **Rust** and **Axum** as part of the BB Web Dev Lab exercise. The application features a dark-themed UI with server-side rendering using Askama templates and persistent SQLite storage.
+
+**Server runs on port 8080**: http://localhost:8080
+
+## Tech Stack
+
+| Component       | Library/Framework | Version |
+|-----------------|-------------------|---------|
+| Web Framework   | Axum              | 0.8.x   |
+| Async Runtime   | Tokio             | 1.x     |
+| Database        | SQLite via sqlx   | 0.8.x   |
+| Templating      | Askama            | 0.14.x  |
+| Serialization   | Serde + serde_json| 1.x     |
+| Error Handling  | anyhow            | 1.x     |
+| HTTP Utilities  | tower-http        | 0.6.x   |
+
+## Project Structure
+
+```
+task-manager/
+├── Cargo.toml              # Dependencies and package config
+├── src/
+│   ├── main.rs             # Entry point, router setup, CORS config
+│   ├── handlers.rs         # HTTP request handlers + Askama template struct
+│   ├── models.rs           # Task struct, database CRUD operations
+│   └── db.rs               # Database pool initialization + table creation
+├── templates/
+│   └── index.html          # Askama template (Jinja2-style syntax)
+└── tasks.db                # SQLite database (auto-generated on first run)
+```
+
+## Architecture Patterns
+
+### Router Setup (main.rs)
+- Routes are defined using Axum's `Router::new()` with method-specific routing
+- State is shared via `.with_state(pool)` using SqlitePool
+- CORS is configured via tower-http's CorsLayer
+
+### Handlers (handlers.rs)
+- Each handler receives `State<SqlitePool>` for database access
+- Path parameters extracted via `Path<T>` extractor
+- JSON payloads extracted via `Json<T>` extractor
+- Return types use `Result<ResponseType, AppError>` pattern
+- Custom `AppError` type wraps `anyhow::Error` and implements `IntoResponse`
+
+### Models (models.rs)
+- Primary struct: `Task` with `#[derive(sqlx::FromRow, Serialize, Deserialize)]`
+- Request DTOs: `CreateTask`, `UpdateTask` with only Deserialize
+- Database operations are implemented as associated functions on `Task`
+- All DB operations are async and return `Result<T, sqlx::Error>`
+
+### Database (db.rs)
+- Connection string: `sqlite:tasks.db?mode=rwc` (read-write-create)
+- Pool initialized with `SqlitePoolOptions::new().max_connections(5)`
+- Table auto-created on startup with `CREATE TABLE IF NOT EXISTS`
+
+## API Endpoints
+
+| Method | Endpoint              | Handler           | Description                    |
+|--------|-----------------------|-------------------|--------------------------------|
+| GET    | `/`                   | `index`           | Render HTML page with tasks    |
+| GET    | `/tasks`              | `list_tasks`      | Return all tasks as JSON       |
+| POST   | `/tasks`              | `create_task`     | Create new task                |
+| PUT    | `/tasks/{id}`         | `update_task`     | Update task title              |
+| POST   | `/tasks/{id}/complete`| `complete_task`   | Mark task as completed         |
+| POST   | `/tasks/{id}/toggle`  | `toggle_task`     | Toggle completion status       |
+
+## Rust Coding Conventions
+
+### Error Handling
+- Use `anyhow::Error` for application errors
+- Wrap in custom `AppError` type for HTTP responses
+- Use `?` operator for error propagation
+- Handle missing resources with `Option<T>` → return 404 if None
+
+### Async Patterns
+- All handlers are async functions
+- Database operations use `sqlx::query` or `sqlx::query_as`
+- Use `.await?` for async + error propagation
+
+### Code Style
+```rust
+// Handler signature pattern
+pub async fn handler_name(
+    State(pool): State<SqlitePool>,
+    Path(id): Path<i64>,
+    Json(payload): Json<RequestType>,
+) -> Result<ResponseType, AppError> {
+    // Implementation
+}
+
+// Model method pattern
+impl Task {
+    pub async fn operation(pool: &SqlitePool, args: &str) -> Result<T, sqlx::Error> {
+        sqlx::query_as::<_, Task>("SELECT ... WHERE ...")
+            .bind(args)
+            .fetch_one(pool)
+            .await
+    }
+}
+```
+
+### Import Organization
+1. External crates (askama, axum, sqlx, etc.)
+2. Standard library (std::)
+3. Local modules (crate::)
+
+## Frontend Conventions
+
+### Design System
+The UI uses a GitHub-inspired dark theme with purple-teal gradient accents.
+
+**CSS Variables (defined in :root):**
+```css
+--bg-primary: #0d1117      /* Main background */
+--bg-secondary: #161b22    /* Card/form backgrounds */
+--bg-tertiary: #21262d     /* Input backgrounds */
+--border-color: #30363d    /* Borders */
+--text-primary: #e6edf3    /* Main text */
+--text-secondary: #8b949e  /* Muted text */
+--accent-green: #3fb950    /* Success/completed */
+--accent-purple: #a371f7   /* Focus states */
+--gradient-start: #7c3aed  /* Purple */
+--gradient-end: #2dd4bf    /* Teal */
+```
+
+**Typography:**
+- Headings/UI: `'Outfit', sans-serif`
+- Mono/code/metadata: `'JetBrains Mono', monospace`
+
+### Askama Template Syntax
+Templates use Jinja2-style syntax:
+```html
+{% if condition %}...{% endif %}
+{% for item in items %}...{% endfor %}
+{{ variable }}
+{{ task.method() }}
+```
+
+### JavaScript Patterns
+- Use `fetch()` API for AJAX requests
+- Update DOM dynamically without page reload
+- Use `escapeHtml()` helper for XSS prevention
+- Event handlers use async/await pattern
+
+## Database Schema
+
+```sql
+CREATE TABLE tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    completed BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## Common Commands
+
+```bash
+# Navigate to project
+cd task-manager
+
+# Build the project
+cargo build
+
+# Run in development (with auto-rebuild on changes)
+cargo run
+
+# Run with release optimizations
+cargo run --release
+
+# Check for errors without building
+cargo check
+
+# Format code
+cargo fmt
+
+# Run clippy lints
+cargo clippy
+```
+
+## Key Implementation Notes
+
+1. **State Management**: SqlitePool is cloned and shared across all handlers via Axum's State extractor. It's cheap to clone (Arc internally).
+
+2. **Path Parameter Syntax**: Axum 0.8 uses `{id}` syntax (not `:id`) for path parameters in route definitions.
+
+3. **Template Location**: Askama expects templates in `templates/` directory relative to `Cargo.toml`. Configure via `#[template(path = "filename.html")]`.
+
+4. **No Delete Endpoint**: Current implementation doesn't include task deletion. Add if needed with `DELETE /tasks/{id}`.
+
+5. **CORS**: Currently allows all origins (`Any`). Tighten for production.
+
+6. **Database File**: `tasks.db` is created in the working directory (typically `task-manager/`).
+
+## Adding New Features
+
+When adding a new endpoint:
+1. Add route in `main.rs` Router
+2. Create handler in `handlers.rs`
+3. Add model method in `models.rs` if DB operation needed
+4. Update template if UI change required
+
+When adding a new model field:
+1. Update struct in `models.rs`
+2. Update SQL schema in `db.rs`
+3. Update relevant queries in model methods
+4. Delete `tasks.db` to recreate schema (or use migrations)
+

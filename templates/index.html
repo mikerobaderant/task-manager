@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        // Initialize theme immediately to prevent flash
+        const savedTheme = localStorage.getItem('theme') || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <style>
+        :root {
+            /* Light Theme (Default) */
+            --bg-page: #f8f9fa;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #e5e7eb;
+            --accent-primary: #111827; /* Almost black */
+            --accent-secondary: #374151;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --transition: 0.2s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-page: #111827;
+            --bg-card: #1f2937;
+            --bg-input: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --accent-primary: #f3f4f6;
+            --accent-secondary: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background-color var(--transition), color var(--transition);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .header-content h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .header-content p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+
+        .add-task-form {
+            background: var(--bg-card);
+            padding: 0.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .add-task-form input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 0.75rem 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .add-task-form input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: var(--bg-page);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        [data-theme="dark"] .btn-primary {
+            color: var(--bg-page); /* Ensure contrast on dark mode */
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .task-item {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+        }
+
+        .task-item:hover {
+            box-shadow: var(--shadow-sm);
+            border-color: var(--text-secondary);
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+            color: white;
+        }
+
+        .task-checkbox:hover {
+            border-color: var(--success);
+        }
+
+        .task-checkbox.checked {
+            background-color: var(--success);
+            border-color: var(--success);
+        }
+
+        .task-checkbox svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .task-checkbox.checked svg {
+            opacity: 1;
+        }
+
+        .task-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-title {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.125rem;
+            transition: var(--transition);
+        }
+
+        .task-item.completed .task-title {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .task-date {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .task-actions {
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .task-item:hover .task-actions {
+            opacity: 1;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-page);
+            color: var(--text-primary);
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--accent-primary);
+            border-radius: var(--radius-md);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            background: var(--bg-page);
+            color: var(--text-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 0;
+            color: var(--text-secondary);
+        }
+        
+        .task-count {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>Task Manager</h1>
+                <p>Keep it simple, get it done.</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme">
+                <!-- Sun Icon -->
+                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <!-- Moon Icon -->
+                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+        </header>
+
+        <form class="add-task-form" id="addTaskForm">
+            <input type="text" id="taskInput" placeholder="What needs to be done?" required autocomplete="off">
+            <button type="submit" class="btn-primary">Add Task</button>
+        </form>
+
+        <div class="task-list" id="taskList">
+            {% if tasks.is_empty() %}
+            <div class="empty-state">
+                <p>No tasks yet. Start by adding one above.</p>
+            </div>
+            {% else %}
+            {% for task in tasks %}
+            <div class="task-item {% if task.completed %}completed{% endif %}" data-id="{{ task.id }}">
+                <div class="task-checkbox {% if task.completed %}checked{% endif %}" onclick="toggleTask({{ task.id }})">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <div class="task-content">
+                    <div class="task-title">{{ task.title }}</div>
+                    <div class="task-date">{{ task.created_at }}</div>
+                </div>
+                <div class="task-actions">
+                    <button class="btn-icon" onclick="editTask({{ task.id }})" title="Edit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        
+        {% if !tasks.is_empty() %}
+        <div class="task-count">
+            {{ tasks.len() }} task{% if tasks.len() != 1 %}s{% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Theme Handling
+        function updateThemeIcon() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.querySelector('.sun-icon').style.display = isDark ? 'block' : 'none';
+            document.querySelector('.moon-icon').style.display = isDark ? 'none' : 'block';
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcon();
+        }
+
+        // Initial icon setup
+        updateThemeIcon();
+
+        // Existing Logic
+        const form = document.getElementById('addTaskForm');
+        const input = document.getElementById('taskInput');
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function createTaskElement(task) {
+            const completedClass = task.completed ? 'completed' : '';
+            const checkedClass = task.completed ? 'checked' : '';
+
+            return `
+                <div class="task-item ${completedClass}" data-id="${task.id}">
+                    <div class="task-checkbox ${checkedClass}" onclick="toggleTask(${task.id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div class="task-content">
+                        <div class="task-title">${escapeHtml(task.title)}</div>
+                        <div class="task-date">${task.created_at}</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-icon" onclick="editTask(${task.id})" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function updateTaskCount() {
+            const taskItems = document.querySelectorAll('.task-item');
+            const count = taskItems.length;
+            let countElement = document.querySelector('.task-count');
+            
+            if (count === 0) {
+                if (countElement) countElement.remove();
+            } else {
+                if (!countElement) {
+                    countElement = document.createElement('div');
+                    countElement.className = 'task-count';
+                    document.querySelector('.container').appendChild(countElement);
+                }
+                countElement.textContent = `${count} task${count !== 1 ? 's' : ''}`;
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = input.value.trim();
+            if (!title) return;
+
+            try {
+                const response = await fetch('/tasks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title })
+                });
+
+                if (response.ok) {
+                    const task = await response.json();
+                    const emptyState = document.querySelector('.empty-state');
+                    if (emptyState) emptyState.remove();
+
+                    const taskElement = createTaskElement(task);
+                    const taskList = document.getElementById('taskList');
+                    taskList.insertAdjacentHTML('afterbegin', taskElement);
+                    
+                    updateTaskCount();
+                    input.value = '';
+                }
+            } catch (error) {
+                console.error('Error creating task:', error);
+            }
+        });
+
+        async function toggleTask(id) {
+            try {
+                const response = await fetch(`/tasks/${id}/toggle`, { method: 'POST' });
+                if (response.ok) {
+                    const task = await response.json();
+                    const taskElement = document.querySelector(`.task-item[data-id="${id}"]`);
+                    const checkbox = taskElement.querySelector('.task-checkbox');
+                    
+                    if (task.completed) {
+                        taskElement.classList.add('completed');
+                        checkbox.classList.add('checked');
+                    } else {
+                        taskElement.classList.remove('completed');
+                        checkbox.classList.remove('checked');
+                    }
+                }
+            } catch (error) {
+                console.error('Error toggling task:', error);
+            }
+        }
+
+        function editTask(id) {
+            const taskElement = document.querySelector(`.task-item[data-id="${id}"]`);
+            const taskTitle = taskElement.querySelector('.task-title');
+            const taskActions = taskElement.querySelector('.task-actions');
+            const originalTitle = taskTitle.textContent;
+
+            taskTitle.textContent = '';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'edit-input';
+            input.value = originalTitle;
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') saveTask(id);
+                if (e.key === 'Escape') cancelEdit(id, originalTitle);
+            });
+            taskTitle.appendChild(input);
+            
+            // Replace actions with save/cancel/delete buttons using safe DOM methods
+            taskActions.innerHTML = '';
+            taskActions.style.display = 'flex';
+            taskActions.style.gap = '0.25rem';
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'btn-icon';
+            saveBtn.title = 'Save';
+            saveBtn.style.color = 'var(--success)';
+            saveBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            saveBtn.onclick = () => saveTask(id);
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn-icon';
+            cancelBtn.title = 'Cancel';
+            cancelBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+            cancelBtn.onclick = () => cancelEdit(id, originalTitle);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-icon';
+            deleteBtn.title = 'Delete';
+            deleteBtn.style.color = 'var(--danger)';
+            deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+            deleteBtn.onclick = () => deleteTask(id);
+            
+            taskActions.appendChild(saveBtn);
+            taskActions.appendChild(cancelBtn);
+            taskActions.appendChild(deleteBtn);
+
+            input.focus();
+            input.select();
+        }
+
+        async function saveTask(id) {
+            const taskElement = document.querySelector(`.task-item[data-id="${id}"]`);
+            const input = taskElement.querySelector('.edit-input');
+            const newTitle = input.value.trim();
+
+            if (!newTitle) {
+                alert('Task title cannot be empty');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/tasks/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle })
+                });
+
+                if (response.ok) {
+                    const task = await response.json();
+                    resetTaskView(id, task.title);
+                }
+            } catch (error) {
+                console.error('Error updating task:', error);
+            }
+        }
+
+        function cancelEdit(id, originalTitle) {
+            resetTaskView(id, originalTitle);
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('Are you sure you want to delete this task?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/tasks/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    const taskElement = document.querySelector(`.task-item[data-id="${id}"]`);
+                    taskElement.remove();
+                    updateTaskCount();
+                    
+                    // Show empty state if no tasks left
+                    const taskItems = document.querySelectorAll('.task-item');
+                    if (taskItems.length === 0) {
+                        const taskList = document.getElementById('taskList');
+                        taskList.innerHTML = '<div class="empty-state"><p>No tasks yet. Start by adding one above.</p></div>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+            }
+        }
+
+        function resetTaskView(id, title) {
+            const taskElement = document.querySelector(`.task-item[data-id="${id}"]`);
+            const taskTitle = taskElement.querySelector('.task-title');
+            const taskActions = taskElement.querySelector('.task-actions');
+            
+            taskTitle.textContent = title;
+            taskActions.style.display = ''; // Remove inline style to revert to css
+            taskActions.innerHTML = `
+                <button class="btn-icon" onclick="editTask(${id})" title="Edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+            `;
+        }
+    </script>
+</body>
+</html>

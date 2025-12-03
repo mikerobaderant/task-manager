@@ -1,0 +1,60 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Task Manager",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=task-manager",
+                    "--package=task-manager"
+                ],
+                "filter": {
+                    "name": "task-manager",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "RUST_BACKTRACE": "1"
+            }
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Run Task Manager (Release)",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--release",
+                    "--bin=task-manager",
+                    "--package=task-manager"
+                ],
+                "filter": {
+                    "name": "task-manager",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Debug Chrome",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}",
+            "timeout": 30000
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug Full Stack (Rust + Chrome)",
+            "configurations": ["Debug Task Manager", "Debug Chrome"],
+            "stopAll": true
+        }
+    ]
+}
