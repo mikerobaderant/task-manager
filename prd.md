@@ -126,9 +126,9 @@ Following the **Explore → Plan → Execute** methodology:
 
 ### Phase 1: Explore
 
-- [ ] Confirm Axum 0.7 patterns (routing, state management)
-- [ ] Verify sqlx SQLite async patterns
-- [ ] Check current best practices for error handling
+- [x] Confirm Axum 0.7 patterns (routing, state management)
+- [x] Verify sqlx SQLite async patterns
+- [x] Check current best practices for error handling
 
 ### Phase 2: Plan
 
@@ -161,19 +161,19 @@ Following the **Explore → Plan → Execute** methodology:
 
 ### Minimum Viable Demo (MVP)
 
-- [ ] Application starts without errors
-- [ ] `GET /tasks` returns JSON array
-- [ ] `POST /tasks` creates a task in SQLite
-- [ ] Tasks persist after restart
-- [ ] Basic HTML form submits tasks
+- [x] Application starts without errors
+- [x] `GET /tasks` returns JSON array
+- [x] `POST /tasks` creates a task in SQLite
+- [x] Tasks persist after restart
+- [x] Basic HTML form submits tasks
 
 ### Full Success
 
-- [ ] All three API endpoints functional
-- [ ] UI displays task list
-- [ ] UI allows adding tasks
-- [ ] UI allows completing tasks
-- [ ] Clean error handling (no panics)
+- [x] All three API endpoints functional
+- [x] UI displays task list
+- [x] UI allows adding tasks
+- [x] UI allows completing tasks
+- [x] Clean error handling (no panics)
 
 ---
 
