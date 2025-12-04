@@ -1,6 +1,6 @@
 # Summary
 
-## BB Web Dev Lab — Rust + Axum Implementation
+## BB Web Dev Lab — Rust + Axum + Askama (Templating) + Vanilla JavaScript Implementation
 
 ### What Was Built
 
