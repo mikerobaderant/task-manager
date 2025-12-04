@@ -2,18 +2,25 @@
 
 ## BB Web Dev Lab — Rust + Axum Implementation
 
+### What Was Built
+
+A fully functional task manager with CRUD operations, SQLite persistence,
+dark/light theme toggle, and a modern UI — exceeding the original PRD scope.
+
 ### Experience Report (~60 sec)
 
-- What was surprisingly easy?
-  - The project was easy to set up. I created a prd.md file to guide the implementation.
-  - Gave cursor rust documentation to help with the implementation.
-  - Generated project rules and slash commands to help with the implementation.
-- What was frustrating or difficult?
-  - Nothing really frustrating or difficult.
-- How helpful was AI with this unfamiliar stack?
-  - Very helpful. The /start-app gives claude access to the server and browser. With that insight it was able to iterate without much input from me. (Fixed UI issues without much input from me.)
+- **What was surprisingly easy?**
+  - Project setup using a PRD to guide Explore-Plan-Execute methodology
+  - Cursor + project rules + slash commands streamlined iteration
+  - `/start-app` gave AI access to server + browser, enabling autonomous UI fixes
+
+- **What was frustrating or difficult?**
+  - Nothing major — the workflow handled complexity well
+
+- **AI effectiveness with Rust?**
+  - Very helpful. Minimal hallucinations, and it correctly used Axum patterns.
 
 ### Hot Take
 
-- Would you use this language again? Why or why not?
-  - Yes, but I'd still rather use .net for the DX. Rust is a great language, but the tooling is not as good as .net.
+Would use Rust again, but prefer .NET for DX. Rust's compiler is strict
+but rewarding; tooling isn't quite as polished.
